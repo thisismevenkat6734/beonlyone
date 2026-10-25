@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#100d20">
+  <meta name="description" content="BeOnlyOne — express your feelings, share your moments, and build meaningful connections.">
+  <meta name="robots" content="index, follow">
+  <title>BeOnlyOne — Be Yourself. Be Connected.</title>
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <meta property="og:title" content="BeOnlyOne">
+  <meta property="og:description" content="Your feelings. Your moments. Your people.">
+  <meta property="og:type" content="website">
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <div id="app" class="app-shell">
+
+    <!-- Loading / notification region -->
+    <div id="loading-screen" class="loading-screen" role="status" aria-live="polite">
+      <div class="brand-mark brand-mark-large">B<span>•</span></div>
+      <p>Making space for you...</p>
+      <div class="loading-track"><span></span></div>
+    </div>
+
+    <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
+
+    <!-- Authentication -->
+    <section id="auth-view" class="auth-view" hidden>
+      <header class="auth-header">
+        <a class="brand" href="#home" aria-label="BeOnlyOne home">
+          <span class="brand-mark">B<span>•</span></span>
+          <span class="brand-name">BeOnly<span>One</span></span>
+        </a>
+        <span class="auth-tagline">A little more human.</span>
+      </header>
+
+      <main class="auth-layout">
+        <div class="auth-intro">
+          <div class="eyebrow"><span class="live-dot"></span> YOUR SPACE, YOUR RULES</div>
+          <h1>Your feelings deserve <span class="gradient-text">a place.</span></h1>
+          <p>Share your moments, express what is on your mind, and find people who understand you.</p>
+
+          <div class="auth-visual" aria-hidden="true">
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <div class="floating-card floating-card-one">
+              <span>☀️</span><span>Today feels hopeful</span>
+            </div>
+            <div class="floating-card floating-card-two">
+              <span>💜</span><span>You are not alone</span>
+            </div>
+            <div class="floating-core">B<span>•</span></div>
+          </div>
+
+          <div class="auth-points">
+            <span>✦ Express freely</span>
+            <span>✦ Connect meaningfully</span>
+            <span>✦ Choose your privacy</span>
+          </div>
+        </div>
+
+        <div class="auth-panel">
+          <div class="auth-panel-heading">
+            <span class="panel-kicker">WELCOME TO YOUR SPACE</span>
+            <h2 id="auth-heading">Welcome back</h2>
+            <p id="auth-subheading">Pick up where you left off.</p>
+          </div>
+
+          <div class="auth-tabs" role="tablist" aria-label="Account access">
+            <button id="login-tab" class="auth-tab active" type="button"
+              role="tab" aria-selected="true" aria-controls="login-form">
+              Sign in
+            </button>
+            <button id="signup-tab" class="auth-tab" type="button"
+              role="tab" aria-selected="false" aria-controls="signup-form">
+              Create account
+            </button>
+          </div>
+
+          <form id="login-form" class="auth-form" novalidate>
+            <label for="login-email">Email address</label>
+            <input id="login-email" name="email" type="email" autocomplete="email"
+              placeholder="you@example.com" required maxlength="254">
+
+            <div class="field-heading">
+              <label for="login-password">Password</label>
+              <button id="forgot-password" class="text-button" type="button">Forgot password?</button>
+            </div>
+            <input id="login-password" name="password" type="password"
+              autocomplete="current-password" placeholder="Enter your password"
+              required minlength="8" maxlength="128">
+
+            <p id="login-error" class="form-message" aria-live="polite"></p>
+            <button class="primary-button full-button" type="submit">
+              <span>Sign in</span><span aria-hidden="true">→</span>
+            </button>
+          </form>
+
+          <form id="signup-form" class="auth-form" hidden novalidate>
+            <label for="signup-name">Your name</label>
+            <input id="signup-name" name="displayName" type="text"
+              autocomplete="name" placeholder="What should we call you?"
+              required minlength="2" maxlength="50">
+
+            <label for="signup-email">Email address</label>
+            <input id="signup-email" name="email" type="email"
+              autocomplete="email" placeholder="you@example.com"
+              required maxlength="254">
+
+            <label for="signup-password">Create password</label>
+            <input id="signup-password" name="password" type="password"
+              autocomplete="new-password" placeholder="At least 8 characters"
+              required minlength="8" maxlength="128">
+
+            <label for="signup-confirm">Confirm password</label>
+            <input id="signup-confirm" name="confirmPassword" type="password"
+              autocomplete="new-password" placeholder="Enter it again"
+              required minlength="8" maxlength="128">
+
+            <label class="check-label">
+              <input id="accept-terms" type="checkbox" required>
+              <span>I agree to the <a href="terms.html">Terms</a> and
+                <a href="privacy.html">Privacy Policy</a>.</span>
+            </label>
+
+            <p id="signup-error" class="form-message" aria-live="polite"></p>
+            <button class="primary-button full-button" type="submit">
+              <span>Create my space</span><span aria-hidden="true">→</span>
+            </button>
+          </form>
+
+          <div class="auth-divider"><span>YOUR SPACE, YOUR CHOICE</span></div>
+          <p class="auth-footnote">Your account is yours. Share thoughtfully and control what others can see.</p>
+        </div>
+      </main>
+
+      <footer class="auth-footer">
+        <span>© <span data-current-year></span> BeOnlyOne</span>
+        <nav aria-label="Legal">
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+        </nav>
+      </footer>
+    </section>
+
+    <!-- Main authenticated application -->
+    <div id="main-view" class="main-view" hidden>
+
+      <header class="topbar">
+        <a class="brand" href="#home" aria-label="BeOnlyOne home">
+          <span class="brand-mark">B<span>•</span></span>
+          <span class="brand-name">BeOnly<span>One</span></span>
+        </a>
+
+        <form id="search-form" class="search-box" role="search">
+          <span aria-hidden="true">⌕</span>
+          <input id="global-search" type="search" placeholder="Find your people..."
+            aria-label="Search people and posts" maxlength="100">
+          <button type="submit" aria-label="Search">↵</button>
+        </form>
+
+        <div class="topbar-actions">
+          <button id="theme-toggle" class="icon-button" type="button"
+            aria-label="Toggle appearance" title="Toggle appearance">◐</button>
+          <button id="notifications-open" class="icon-button notification-button"
+            type="button" aria-label="Notifications">
+            ♡<span id="notification-badge" class="notification-badge" hidden>0</span>
+          </button>
+          <button id="header-profile" class="avatar avatar-small" type="button"
+            aria-label="Open your profile">B</button>
+        </div>
+      </header>
+
+      <div class="app-layout">
+
+        <aside class="sidebar sidebar-left" aria-label="Main navigation">
+          <div class="sidebar-profile">
+            <div id="sidebar-avatar" class="avatar avatar-large">B</div>
+            <div class="sidebar-profile-info">
+              <strong id="sidebar-name">Your space</strong>
+              <span id="sidebar-handle">@you</span>
+            </div>
+            <button id="edit-profile-shortcut" class="icon-button" type="button"
+              aria-label="Edit profile">✎</button>
+          </div>
+
+          <div class="sidebar-label">YOUR WORLD</div>
+          <nav class="main-nav">
+            <button class="nav-link active" type="button" data-view="feed">
+              <span>⌂</span> Home feed
+            </button>
+            <button class="nav-link" type="button" data-view="moods">
+              <span>☼</span> Feelings
+            </button>
+            <button class="nav-link" type="button" data-view="reels">
+              <span>▷</span> Reels
+            </button>
+            <button class="nav-link" type="button" data-view="stories">
+              <span>◉</span> Stories
+            </button>
+            <button class="nav-link" type="button" data-view="connections">
+              <span>♧</span> Connections
+            </button>
+            <button class="nav-link" type="button" data-view="discover">
+              <span>⌕</span> Discover people
+            </button>
+            <button class="nav-link" type="button" data-view="map">
+              <span>⌖</span> Shared locations
+            </button>
+            <button class="nav-link" type="button" data-view="notifications">
+              <span>♡</span> Activity
+              <span id="nav-notification-count" class="nav-count" hidden>0</span>
+            </button>
+          </nav>
+
+          <div class="sidebar-bottom">
+            <div class="sidebar-label">YOUR ACCOUNT</div>
+            <button class="nav-link" type="button" data-view="profile">
+              <span>◎</span> My profile
+            </button>
+            <button class="nav-link" type="button" data-view="settings">
+              <span>⚙</span> Settings & privacy
+            </button>
+            <button id="signout-button" class="nav-link signout-link" type="button">
+              <span>↗</span> Sign out
+            </button>
+            <div class="sidebar-legal">
+              <a href="privacy.html">Privacy</a>
+              <a href="terms.html">Terms</a>
+            </div>
+          </div>
+        </aside>
+
+        <main id="main-content" class="content-area" tabindex="-1">
+          <div id="view-heading" class="view-heading">
+            <div>
+              <div class="eyebrow">YOUR LITTLE CORNER OF THE INTERNET</div>
+              <h1>Good to see you<span class="heading-sparkle"> ✦</span></h1>
+              <p>Show up as you are. That is enough.</p>
+            </div>
+            <button id="create-post-shortcut" class="primary-button" type="button">
+              <span>＋</span> Create post
+            </button>
+          </div>
+
+          <!-- Stories strip -->
+          <section id="stories-strip" class="stories-section" aria-label="Stories">
+            <div class="section-heading">
+              <div>
+                <h2>Little moments</h2>
+                <p>A glimpse into someone's day.</p>
+              </div>
+              <button class="text-button" type="button" data-view="stories">View all →</button>
+            </div>
+            <div id="stories-list" class="stories-list">
+              <button id="create-story-shortcut" class="story-item create-story" type="button">
+                <span class="story-avatar story-add">＋</span>
+                <span>Your story</span>
+              </button>
+              <div class="empty-inline">Your community's stories will appear here.</div>
+            </div>
+          </section>
+
+          <!-- Create post -->
+          <section id="composer-card" class="composer-card" aria-label="Create a post">
+            <div class="composer-top">
+              <div id="composer-avatar" class="avatar">B</div>
+              <button id="composer-open" class="composer-placeholder" type="button">
+                What is on your mind today?
+              </button>
+            </div>
+            <div class="composer-actions">
+              <button class="composer-action" type="button" data-compose-type="photo">
+                <span>▧</span> Photo
+              </button>
+              <button class="composer-action" type="button" data-compose-type="video">
+                <span>▷</span> Video
+              </button>
+              <button class="composer-action" type="button" data-compose-type="mood">
+                <span>☼</span> Feeling
+              </button>
+              <button class="composer-action" type="button" data-compose-type="audio">
+                <span>♫</span> Audio
+              </button>
+            </div>
+          </section>
+
+          <!-- Main content views -->
+          <section id="feed-view" class="feed-view" aria-label="Home feed">
+            <div class="section-heading feed-heading">
+              <div>
+                <h2>Your feed</h2>
+                <p>Real moments from your people.</p>
+              </div>
+              <label class="visually-hidden" for="feed-filter">Feed filter</label>
+              <select id="feed-filter" class="small-select">
+                <option value="latest">Latest</option>
+                <option value="connections">Connections</option>
+              </select>
+            </div>
+            <div id="feed-list" class="feed-list">
+              <div class="empty-state">
+                <div class="empty-art">✦</div>
+                <h3>Your story starts here</h3>
+                <p>Share a moment or connect with people to fill your feed.</p>
+                <button class="primary-button" type="button" id="first-post-button">Create your first post</button>
+              </div>
+            </div>
+            <button id="load-more-posts" class="secondary-button full-button" type="button" hidden>
+              Load more
+            </button>
+          </section>
+
+          <section id="moods-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Feelings, without filters</h2><p>Some days need words. Some need a little color.</p></div></div>
+            <div class="mood-selector" id="mood-selector" aria-label="Choose your mood">
+              <button type="button" class="mood-option" data-mood="happy">😊<span>Happy</span></button>
+              <button type="button" class="mood-option" data-mood="calm">🌿<span>Calm</span></button>
+              <button type="button" class="mood-option" data-mood="excited">✨<span>Excited</span></button>
+              <button type="button" class="mood-option" data-mood="sad">🌧️<span>Sad</span></button>
+              <button type="button" class="mood-option" data-mood="thoughtful">🌙<span>Thoughtful</span></button>
+              <button type="button" class="mood-option" data-mood="grateful">💜<span>Grateful</span></button>
+            </div>
+            <form id="mood-form" class="surface-card" novalidate>
+              <label for="mood-text">Put your feeling into words</label>
+              <textarea id="mood-text" maxlength="1000" rows="4" placeholder="It is okay to feel what you feel..."></textarea>
+              <div class="form-row">
+                <label for="mood-visibility">Who can see this?</label>
+                <select id="mood-visibility">
+                  <option value="connections">My connections</option>
+                  <option value="private">Only me</option>
+                  <option value="public">Everyone</option>
+                </select>
+              </div>
+              <button class="primary-button" type="submit">Share my feeling</button>
+              <p id="mood-message" class="form-message" aria-live="polite"></p>
+            </form>
+            <div id="mood-feed" class="feed-list"></div>
+          </section>
+
+          <section id="reels-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Reels</h2><p>Little videos, big feelings. Videos are limited to 30 seconds.</p></div></div>
+            <div id="reels-list" class="reels-list">
+              <div class="empty-state"><div class="empty-art">▷</div><h3>Make the moment move</h3><p>Your community's short videos will appear here.</p><button class="primary-button" type="button" data-compose-type="video">Create a reel</button></div>
+            </div>
+          </section>
+
+          <section id="stories-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Stories</h2><p>Moments that capture today.</p></div><button id="create-story-button" class="primary-button" type="button">＋ Add story</button></div>
+            <div id="all-stories-list" class="stories-grid"></div>
+          </section>
+
+          <section id="connections-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Your people</h2><p>Connections grow one hello at a time.</p></div><button class="secondary-button" type="button" data-view="discover">Find people</button></div>
+            <div id="connection-requests" class="surface-card"><h3>Requests</h3><div id="requests-list">No connection requests to show yet.</div></div>
+            <div id="connections-list" class="people-grid"></div>
+          </section>
+
+          <section id="discover-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Find your people</h2><p>Discover people who want to share their world.</p></div></div>
+            <form id="people-search-form" class="inline-search">
+              <input id="people-search-input" type="search" placeholder="Search by name..." maxlength="80" aria-label="Search people">
+              <button class="primary-button" type="submit">Search</button>
+            </form>
+            <div id="discover-list" class="people-grid"></div>
+          </section>
+
+          <section id="map-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Shared locations</h2><p>Location sharing is optional. Nothing is shared unless you choose to share it.</p></div></div>
+            <div class="privacy-notice"><span>⌖</span><div><strong>Your location belongs to you.</strong><p>Choose when to share, who can see it, and when sharing expires. You can stop sharing at any time.</p></div></div>
+            <div class="surface-card">
+              <label class="check-label"><input id="location-sharing-toggle" type="checkbox"><span>Enable location sharing</span></label>
+              <label for="location-audience">Share with</label>
+              <select id="location-audience"><option value="selected">Selected connections only</option></select>
+              <label for="location-duration">Sharing duration</label>
+              <select id="location-duration"><option value="1">1 hour</option><option value="6">6 hours</option><option value="12">12 hours</option></select>
+              <button id="location-start-button" class="primary-button" type="button">Review & share my location</button>
+              <button id="location-stop-button" class="secondary-button" type="button" hidden>Stop sharing</button>
+              <p id="location-status" class="form-message" aria-live="polite">Location sharing is off.</p>
+            </div>
+            <div id="location-map" class="map-placeholder"><span>⌖</span><p>Shared locations will appear here when available.</p></div>
+          </section>
+
+          <section id="notifications-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Your activity</h2><p>Little signs that someone stopped by.</p></div><button id="mark-notifications-read" class="text-button" type="button">Mark all as read</button></div>
+            <div id="notifications-list" class="activity-list"></div>
+          </section>
+
+          <section id="profile-view" class="dynamic-view" hidden>
+            <div id="profile-cover" class="profile-cover"></div>
+            <div class="profile-overview surface-card">
+              <div id="profile-avatar" class="avatar avatar-profile">B</div>
+              <div class="profile-overview-main"><h2 id="profile-name">Your name</h2><p id="profile-handle">@you</p><p id="profile-bio">Your story, in your own words.</p></div>
+              <button id="profile-edit-button" class="secondary-button" type="button">Edit profile</button>
+            </div>
+            <div class="profile-stats">
+              <div><strong id="profile-post-count">0</strong><span>Posts</span></div>
+              <div><strong id="profile-connections-count">0</strong><span>Connections</span></div>
+              <div><strong id="profile-likes-count">0</strong><span>Likes received</span></div>
+            </div>
+            <div class="section-heading"><div><h2>Your moments</h2></div></div>
+            <div id="profile-posts" class="feed-list"></div>
+          </section>
+
+          <section id="settings-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Settings & privacy</h2><p>You decide how your account works.</p></div></div>
+            <form id="profile-edit-form" class="surface-card" novalidate>
+              <h3>Your profile</h3>
+              <label for="edit-display-name">Display name</label>
+              <input id="edit-display-name" type="text" maxlength="50" required>
+              <label for="edit-bio">About you</label>
+              <textarea id="edit-bio" rows="3" maxlength="300" placeholder="Tell people a little about yourself."></textarea>
+              <label for="edit-avatar-file">Profile photo</label>
+              <input id="edit-avatar-file" type="file" accept="image/jpeg,image/png,image/webp">
+              <label class="check-label"><input id="private-profile-toggle" type="checkbox"><span>Private profile — approve connection requests before sharing private posts.</span></label>
+              <button class="primary-button" type="submit">Save profile</button>
+              <p id="profile-edit-message" class="form-message" aria-live="polite"></p>
+            </form>
+
+            <div class="surface-card">
+              <h3>Privacy & safety</h3>
+              <label class="check-label"><input id="allow-discovery-toggle" type="checkbox" checked><span>Allow people to find my profile.</span></label>
+              <p class="muted-text">Blocking, reporting, and privacy settings help you manage your experience.</p>
+              <button id="blocked-users-button" class="secondary-button" type="button">Manage blocked users</button>
+              <button id="report-problem-button" class="secondary-button" type="button">Report a problem</button>
+            </div>
+
+            <div class="surface-card danger-zone">
+              <h3>Account management</h3>
+              <p>Account deletion should remove or anonymize your personal data according to the published privacy policy and applicable requirements.</p>
+              <button id="delete-account-button" class="danger-button" type="button">Request account deletion</button>
+            </div>
+          </section>
+
+          <section id="search-results-view" class="dynamic-view" hidden>
+            <div class="section-heading"><div><h2>Search results</h2><p id="search-results-label">People and posts</p></div></div>
+            <div id="search-results-list" class="feed-list"></div>
+          </section>
+
+          <section id="public-profile-view" class="dynamic-view" hidden>
+            <button class="text-button" type="button" data-view="discover">← Back to discover</button>
+            <div id="public-profile-content"></div>
+          </section>
+
+          <div id="global-error" class="form-message" role="alert" hidden></div>
+        </main>
+
+        <aside class="sidebar sidebar-right" aria-label="Community">
+          <section class="right-widget mood-widget">
+            <div class="widget-heading"><span class="widget-icon">☼</span><span>Little check-in</span></div>
+            <h3>How are you, really?</h3>
+            <p>No right answer. Just your answer.</p>
+            <button id="right-mood-shortcut" class="secondary-button full-button" type="button" data-view="moods">Check in with yourself</button>
+          </section>
+
+          <section class="right-widget">
+            <div class="widget-heading"><span class="widget-icon">✧</span><span>Your community</span></div>
+            <h3>People to discover</h3>
+            <div id="suggested-people">
+              <p class="muted-text">Your suggestions will appear here.</p>
+            </div>
+            <button class="text-button" type="button" data-view="discover">Explore people →</button>
+          </section>
+
+          <section class="right-widget safety-widget">
+            <div class="widget-heading"><span class="widget-icon">♡</span><span>A gentle reminder</span></div>
+            <p>Share what feels right. Your boundaries matter online, too.</p>
+            <a href="privacy.html">Explore privacy choices →</a>
+          </section>
+
+          <footer class="right-footer">
+            <span>© <span data-current-year></span> BeOnlyOne</span>
+            <div><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></div>
+            <p>Be yourself. Be connected.</p>
+          </footer>
+        </aside>
+      </div>
+
+      <!-- Mobile navigation -->
+      <nav id="mobile-navigation" class="mobile-nav" aria-label="Mobile navigation">
+        <button type="button" class="mobile-nav-item active" data-view="feed"><span>⌂</span><small>Home</small></button>
+        <button type="button" class="mobile-nav-item" data-view="discover"><span>⌕</span><small>Discover</small></button>
+        <button type="button" id="mobile-create-button" class="mobile-create-button" aria-label="Create post">＋</button>
+        <button type="button" class="mobile-nav-item" data-view="reels"><span>▷</span><small>Reels</small></button>
+        <button type="button" class="mobile-nav-item" data-view="profile"><span>◎</span><small>Profile</small></button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Post / mood / story composer -->
+  <dialog id="composer-dialog" class="app-dialog">
+    <form id="post-form" class="dialog-content" novalidate>
+      <div class="dialog-heading">
+        <div><span class="panel-kicker">YOUR MOMENT</span><h2 id="composer-dialog-title">Create a post</h2></div>
+        <button class="icon-button" type="button" data-close-dialog="composer-dialog" aria-label="Close">✕</button>
+      </div>
+
+      <label for="post-text">What would you like to share?</label>
+      <textarea id="post-text" maxlength="3000" rows="5" placeholder="Write your moment here..."></textarea>
+
+      <label for="post-mood">Mood (optional)</label>
+      <select id="post-mood">
+        <option value="">Choose a mood</option>
+        <option value="happy">😊 Happy</option>
+        <option value="calm">🌿 Calm</option>
+        <option value="excited">✨ Excited</option>
+        <option value="sad">🌧️ Sad</option>
+        <option value="thoughtful">🌙 Thoughtful</option>
+        <option value="grateful">💜 Grateful</option>
+      </select>
+
+      <label for="post-media">Photo, video or audio (optional)</label>
+      <input id="post-media" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,audio/mpeg,audio/mp4,audio/ogg,audio/webm,audio/wav">
+      <p class="muted-text">Images up to 10 MB, videos up to 50 MB and 30 seconds, audio up to 20 MB. Actual validation must also run in the upload/backend flow.</p>
+      <div id="media-preview" class="media-preview" hidden></div>
+
+      <label for="post-visibility">Who can see this?</label>
+      <select id="post-visibility">
+        <option value="connections">My connections</option>
+        <option value="private">Only me</option>
+        <option value="public">Everyone</option>
+      </select>
+
+      <label class="check-label" id="story-option-label">
+        <input id="post-as-story" type="checkbox">
+        <span>Share as a story, too.</span>
+      </label>
+
+      <p id="post-error" class="form-message" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" data-close-dialog="composer-dialog">Cancel</button>
+        <button id="publish-post-button" class="primary-button" type="submit">Share moment</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Comments -->
+  <dialog id="comments-dialog" class="app-dialog">
+    <div class="dialog-content">
+      <div class="dialog-heading">
+        <div><span class="panel-kicker">THE CONVERSATION</span><h2>Comments</h2></div>
+        <button class="icon-button" type="button" data-close-dialog="comments-dialog" aria-label="Close">✕</button>
+      </div>
+      <div id="comments-list" class="comments-list"></div>
+      <form id="comment-form" class="comment-form" novalidate>
+        <label class="visually-hidden" for="comment-text">Write a comment</label>
+        <input id="comment-text" maxlength="1000" placeholder="Add something kind..." required>
+        <button class="primary-button" type="submit">Send</button>
+      </form>
+      <p id="comment-error" class="form-message" aria-live="polite"></p>
+    </div>
+  </dialog>
+
+  <!-- Reusable confirmation / report dialog -->
+  <dialog id="action-dialog" class="app-dialog">
+    <form id="action-form" class="dialog-content" novalidate>
+      <div class="dialog-heading">
+        <div><span class="panel-kicker">YOUR CHOICE</span><h2 id="action-dialog-title">Confirm action</h2></div>
+        <button class="icon-button" type="button" data-close-dialog="action-dialog" aria-label="Close">✕</button>
+      </div>
+      <p id="action-dialog-description"></p>
+      <label id="action-reason-label" for="action-reason" hidden>Tell us more (optional)</label>
+      <textarea id="action-reason" maxlength="1000" rows="3" hidden></textarea>
+      <p id="action-dialog-error" class="form-message" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" data-close-dialog="action-dialog">Cancel</button>
+        <button id="confirm-action-button" class="danger-button" type="submit">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <noscript>
+    <div class="noscript-message">BeOnlyOne needs JavaScript enabled for account access and interactive features.</div>
+  </noscript>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
