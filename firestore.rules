@@ -1,0 +1,341 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function validText(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+
+    function connectionDocId(uid1, uid2) {
+      return uid1 < uid2
+        ? uid1 + "_" + uid2
+        : uid2 + "_" + uid1;
+    }
+
+    function isConnected(uid1, uid2) {
+      return signedIn()
+        && exists(
+          /databases/$(database)/documents/connections/$(connectionDocId(uid1, uid2))
+        )
+        && get(
+          /databases/$(database)/documents/connections/$(connectionDocId(uid1, uid2))
+        ).data.memberUids is list
+        && request.auth.uid in get(
+          /databases/$(database)/documents/connections/$(connectionDocId(uid1, uid2))
+        ).data.memberUids
+        && uid2 in get(
+          /databases/$(database)/documents/connections/$(connectionDocId(uid1, uid2))
+        ).data.memberUids;
+    }
+
+    function isBlockedByEither(uid1, uid2) {
+      return exists(
+        /databases/$(database)/documents/blocks/$(uid1 + "_" + uid2)
+      ) || exists(
+        /databases/$(database)/documents/blocks/$(uid2 + "_" + uid1)
+      );
+    }
+
+    function canReadProfile(uid) {
+      return signedIn()
+        && (
+          isSelf(uid)
+          || (
+            resource.data.allowDiscovery == true
+            && !isBlockedByEither(request.auth.uid, uid)
+          )
+          || isConnected(request.auth.uid, uid)
+        );
+    }
+
+    function validProfile() {
+      return request.resource.data.keys().hasOnly([
+          "uid",
+          "displayName",
+          "handle",
+          "email",
+          "photoURL",
+          "bio",
+          "isPrivate",
+          "allowDiscovery",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && validText(request.resource.data.displayName, 60)
+        && validText(request.resource.data.handle, 40)
+        && validText(request.resource.data.email, 254)
+        && validText(request.resource.data.photoURL, 2048)
+        && validText(request.resource.data.bio, 300)
+        && request.resource.data.isPrivate is bool
+        && request.resource.data.allowDiscovery is bool;
+    }
+
+    function canReadPost() {
+      return signedIn()
+        && !isBlockedByEither(request.auth.uid, resource.data.uid)
+        && (
+          resource.data.uid == request.auth.uid
+          || (
+            resource.data.visibility == "public"
+            && get(
+              /databases/$(database)/documents/profiles/$(resource.data.uid)
+            ).data.isPrivate != true
+          )
+          || (
+            resource.data.visibility == "connections"
+            && isConnected(request.auth.uid, resource.data.uid)
+          )
+        );
+    }
+
+    function validPost() {
+      return request.resource.data.keys().hasOnly([
+          "uid",
+          "displayName",
+          "handle",
+          "photoURL",
+          "text",
+          "mood",
+          "media",
+          "visibility",
+          "isStory",
+          "likeCount",
+          "commentCount",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && validText(request.resource.data.displayName, 60)
+        && validText(request.resource.data.handle, 40)
+        && validText(request.resource.data.photoURL, 2048)
+        && validText(request.resource.data.text, 2000)
+        && validText(request.resource.data.mood, 40)
+        && request.resource.data.visibility in [
+          "public",
+          "connections",
+          "private"
+        ]
+        && request.resource.data.isStory is bool
+        && request.resource.data.likeCount == 0
+        && request.resource.data.commentCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    // User profiles
+    match /profiles/{uid} {
+      allow get: if signedIn()
+        && (
+          isSelf(uid)
+          || (
+            resource.data.allowDiscovery == true
+            && !isBlockedByEither(request.auth.uid, uid)
+          )
+          || isConnected(request.auth.uid, uid)
+        );
+
+      allow list: if signedIn()
+        && resource.data.allowDiscovery == true
+        && !isBlockedByEither(request.auth.uid, resource.data.uid);
+
+      allow create: if isSelf(uid)
+        && validProfile()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isSelf(uid)
+        && validProfile()
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly([
+            "displayName",
+            "handle",
+            "photoURL",
+            "bio",
+            "isPrivate",
+            "allowDiscovery",
+            "updatedAt"
+          ]);
+
+      allow delete: if false;
+    }
+
+    // Posts and moods
+    match /posts/{postId} {
+      allow get, list: if canReadPost();
+
+      allow create: if signedIn() && validPost();
+
+      // Post counters and content updates must be moved to trusted backend
+      // functions before enabling production interactions.
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(["text", "mood", "visibility", "updatedAt"])
+        && validText(request.resource.data.text, 2000)
+        && validText(request.resource.data.mood, 40)
+        && request.resource.data.visibility in [
+          "public",
+          "connections",
+          "private"
+        ];
+
+      allow delete: if signedIn()
+        && resource.data.uid == request.auth.uid;
+
+      match /likes/{likeUid} {
+        allow get, list: if signedIn()
+          && canReadPost();
+
+        allow create: if isSelf(likeUid)
+          && canReadPost()
+          && request.resource.data.keys().hasOnly(["uid", "createdAt"])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.createdAt == request.time;
+
+        allow delete: if isSelf(likeUid) && canReadPost();
+        allow update: if false;
+      }
+
+      match /comments/{commentId} {
+        allow get, list: if canReadPost();
+
+        allow create: if signedIn()
+          && canReadPost()
+          && request.resource.data.keys().hasOnly([
+            "uid",
+            "displayName",
+            "text",
+            "createdAt"
+          ])
+          && request.resource.data.uid == request.auth.uid
+          && validText(request.resource.data.displayName, 60)
+          && validText(request.resource.data.text, 1000)
+          && request.resource.data.text.size() > 0
+          && request.resource.data.createdAt == request.time;
+
+        allow update: if false;
+
+        allow delete: if signedIn()
+          && (
+            resource.data.uid == request.auth.uid
+            || get(
+              /databases/$(database)/documents/posts/$(postId)
+            ).data.uid == request.auth.uid
+          );
+      }
+    }
+
+    // Stories: read access follows their visibility and expiry.
+    match /stories/{storyId} {
+      allow get, list: if signedIn()
+        && resource.data.expiresAt > request.time
+        && !isBlockedByEither(request.auth.uid, resource.data.uid)
+        && (
+          resource.data.uid == request.auth.uid
+          || resource.data.visibility == "public"
+          || (
+            resource.data.visibility == "connections"
+            && isConnected(request.auth.uid, resource.data.uid)
+          )
+        );
+
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "displayName",
+          "handle",
+          "photoURL",
+          "text",
+          "mood",
+          "media",
+          "visibility",
+          "isStory",
+          "likeCount",
+          "commentCount",
+          "createdAt",
+          "updatedAt",
+          "expiresAt"
+        ])
+        && request.resource.data.isStory == true
+        && request.resource.data.visibility in [
+          "public",
+          "connections",
+          "private"
+        ]
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <=
+          request.time + duration.value(25, "h");
+
+      allow update, delete: if signedIn()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // Connection requests: writes must use a trusted callable function.
+    match /connectionRequests/{requestId} {
+      allow get, list: if signedIn()
+        && (
+          resource.data.fromUid == request.auth.uid
+          || resource.data.toUid == request.auth.uid
+        );
+
+      allow create, update, delete: if false;
+    }
+
+    // Connection documents: trusted backend only.
+    match /connections/{connectionId} {
+      allow get, list: if signedIn()
+        && request.auth.uid in resource.data.memberUids;
+
+      allow create, update, delete: if false;
+    }
+
+    // Notifications: owner can read; backend manages writes.
+    match /notifications/{notificationId} {
+      allow get, list: if signedIn()
+        && resource.data.userId == request.auth.uid;
+
+      allow create, update, delete: if false;
+    }
+
+    // Blocks: backend must maintain canonical IDs and validate both users.
+    match /blocks/{blockId} {
+      allow get, list: if signedIn()
+        && (
+          resource.data.blockerUid == request.auth.uid
+          || resource.data.blockedUid == request.auth.uid
+        );
+
+      allow create, update, delete: if false;
+    }
+
+    // Reports contain sensitive information. Backend-only access.
+    match /reports/{reportId} {
+      allow read, write: if false;
+    }
+
+    // Location data must never be publicly readable or client-writable.
+    match /locations/{uid} {
+      allow read, write: if false;
+    }
+
+    // Deny everything not explicitly permitted above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
