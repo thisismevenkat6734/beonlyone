@@ -23,11 +23,10 @@ service cloud.firestore {
 
     function isBlocked(uidA, uidB) {
       return exists(
-          /databases/$(database)/documents/blocks/$(uidA + "_" + uidB)
-        )
-        || exists(
-          /databases/$(database)/documents/blocks/$(uidB + "_" + uidA)
-        );
+        /databases/$(database)/documents/blocks/$(uidA + "_" + uidB)
+      ) || exists(
+        /databases/$(database)/documents/blocks/$(uidB + "_" + uidA)
+      );
     }
 
     function connected(uidA, uidB) {
@@ -48,18 +47,171 @@ service cloud.firestore {
         && !isBlocked(request.auth.uid, uid)
         && (
           request.auth.uid == uid
+          || connected(request.auth.uid, uid)
           || (
             get(/databases/$(database)/documents/profiles/$(uid))
-              .data.isPrivate != true
+              .data.isPrivate == false
             && get(/databases/$(database)/documents/profiles/$(uid))
               .data.allowDiscovery == true
           )
-          || connected(request.auth.uid, uid)
         );
     }
 
-    function canReadPost() {
+    function canReadPostDocument(postId) {
       return signedIn()
+        && exists(
+          /databases/$(database)/documents/posts/$(postId)
+        )
+        && canReadPostData(
+          get(/databases/$(database)/documents/posts/$(postId)).data
+        );
+    }
+
+    function canReadPostData(postData) {
+      return signedIn()
+        && !isBlocked(request.auth.uid, postData.uid)
+        && (
+          request.auth.uid == postData.uid
+          || (
+            postData.visibility == "public"
+            && canReadProfile(postData.uid)
+          )
+          || (
+            postData.visibility == "connections"
+            && connected(request.auth.uid, postData.uid)
+          )
+        );
+    }
+
+    function validProfile(data, uid) {
+      return data.uid == uid
+        && data.keys().hasAll([
+          "uid",
+          "displayName",
+          "handle",
+          "email",
+          "photoURL",
+          "bio",
+          "isPrivate",
+          "allowDiscovery",
+          "createdAt",
+          "updatedAt"
+        ])
+        && data.keys().hasOnly([
+          "uid",
+          "displayName",
+          "handle",
+          "email",
+          "photoURL",
+          "bio",
+          "isPrivate",
+          "allowDiscovery",
+          "createdAt",
+          "updatedAt"
+        ])
+        && validString(data.displayName, 80)
+        && validString(data.handle, 40)
+        && validString(data.email, 254)
+        && validString(data.photoURL, 2048)
+        && validString(data.bio, 500)
+        && data.isPrivate is bool
+        && data.allowDiscovery is bool;
+    }
+
+    function validPost(data) {
+      return data.uid == request.auth.uid
+        && validString(data.text, 5000)
+        && validString(data.mood, 40)
+        && data.visibility in ["public", "connections", "private"]
+        && data.likeCount == 0
+        && data.commentCount == 0
+        && (data.media == null || data.media is map)
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
+    }
+
+    // PROFILES
+    match /profiles/{uid} {
+      allow get: if isSelf(uid) || canReadProfile(uid);
+
+      allow list: if signedIn()
+        && resource.data.allowDiscovery == true
+        && resource.data.isPrivate == false
+        && !isBlocked(request.auth.uid, resource.data.uid);
+
+      allow create: if isSelf(uid)
+        && validProfile(request.resource.data, uid)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isSelf(uid)
+        && validProfile(request.resource.data, uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+
+      // Deletion is performed by a trusted backend.
+      allow delete: if false;
+    }
+
+    // POSTS
+    match /posts/{postId} {
+      allow get, list: if canReadPostData(resource.data);
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasAll([
+          "uid",
+          "displayName",
+          "handle",
+          "photoURL",
+          "text",
+          "mood",
+          "media",
+          "visibility",
+          "isStory",
+          "likeCount",
+          "commentCount",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "displayName",
+          "handle",
+          "photoURL",
+          "text",
+          "mood",
+          "media",
+          "visibility",
+          "isStory",
+          "likeCount",
+          "commentCount",
+          "createdAt",
+          "updatedAt"
+        ])
+        && validPost(request.resource.data)
+        && request.resource.data.isStory == false
+        && !isBlocked(request.auth.uid, request.auth.uid);
+
+      // Counters and post deletion must use trusted backend functions.
+      allow update, delete: if false;
+
+      match /likes/{likeUid} {
+        allow get, list: if canReadPostDocument(postId);
+        allow create, update, delete: if false;
+      }
+
+      match /comments/{commentId} {
+        allow get, list: if canReadPostDocument(postId);
+        allow create, update, delete: if false;
+      }
+    }
+
+    // STORIES
+    match /stories/{storyId} {
+      allow get, list: if signedIn()
+        && resource.data.expiresAt > request.time
         && !isBlocked(request.auth.uid, resource.data.uid)
         && (
           request.auth.uid == resource.data.uid
@@ -72,114 +224,17 @@ service cloud.firestore {
             && connected(request.auth.uid, resource.data.uid)
           )
         );
-    }
-
-    match /profiles/{uid} {
-      allow get: if canReadProfile(uid);
-      allow list: if signedIn()
-        && resource.data.allowDiscovery == true
-        && resource.data.isPrivate != true
-        && !isBlocked(request.auth.uid, uid);
-
-      allow create: if isSelf(uid)
-        && request.resource.data.uid == uid
-        && request.resource.data.keys().hasAll([
-          "uid", "displayName", "email", "bio",
-          "isPrivate", "allowDiscovery", "createdAt", "updatedAt"
-        ])
-        && request.resource.data.keys().hasOnly([
-          "uid", "displayName", "email", "bio", "photoURL",
-          "isPrivate", "allowDiscovery", "createdAt", "updatedAt"
-        ])
-        && validString(request.resource.data.displayName, 80)
-        && validString(request.resource.data.email, 254)
-        && validString(request.resource.data.bio, 500)
-        && request.resource.data.isPrivate is bool
-        && request.resource.data.allowDiscovery is bool
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time;
-
-      allow update: if isSelf(uid)
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly([
-            "displayName", "bio", "photoURL",
-            "isPrivate", "allowDiscovery", "updatedAt"
-          ])
-        && validString(request.resource.data.displayName, 80)
-        && validString(request.resource.data.bio, 500)
-        && request.resource.data.isPrivate is bool
-        && request.resource.data.allowDiscovery is bool
-        && request.resource.data.updatedAt == request.time;
-
-      allow delete: if false;
-    }
-
-    match /posts/{postId} {
-      allow get, list: if canReadPost();
 
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.keys().hasAll([
-          "uid", "text", "mood", "visibility",
-          "likeCount", "commentCount", "createdAt", "updatedAt"
+          "uid",
+          "text",
+          "visibility",
+          "expiresAt",
+          "createdAt",
+          "updatedAt"
         ])
-        && request.resource.data.uid is string
-        && validString(request.resource.data.text, 5000)
-        && validString(request.resource.data.mood, 40)
-        && request.resource.data.visibility in [
-          "public", "connections", "private"
-        ]
-        && request.resource.data.likeCount == 0
-        && request.resource.data.commentCount == 0
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time
-        && !isBlocked(request.auth.uid, request.auth.uid);
-
-      allow update: if isSelf(resource.data.uid)
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(["text", "mood", "visibility", "updatedAt"])
-        && validString(request.resource.data.text, 5000)
-        && validString(request.resource.data.mood, 40)
-        && request.resource.data.visibility in [
-          "public", "connections", "private"
-        ]
-        && request.resource.data.updatedAt == request.time;
-
-      allow delete: if false;
-
-      match /likes/{likeUid} {
-        allow get, list: if signedIn()
-          && canReadPost();
-
-        allow create, update, delete: if false;
-      }
-
-      match /comments/{commentId} {
-        allow get, list: if canReadPost();
-
-        allow create, update, delete: if false;
-      }
-    }
-
-    match /stories/{storyId} {
-      allow get, list: if signedIn()
-        && resource.data.expiresAt > request.time
-        && !isBlocked(request.auth.uid, resource.data.uid)
-        && (
-          resource.data.uid == request.auth.uid
-          || (
-            resource.data.visibility == "public"
-            && canReadProfile(resource.data.uid)
-          )
-          || (
-            resource.data.visibility == "connections"
-            && connected(request.auth.uid, resource.data.uid)
-          )
-        );
-
-      allow create: if signedIn()
-        && request.resource.data.uid == request.auth.uid
         && request.resource.data.expiresAt is timestamp
         && request.resource.data.expiresAt > request.time
         && request.resource.data.expiresAt
@@ -188,34 +243,41 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // CONNECTIONS: backend only
     match /connectionRequests/{requestId} {
       allow read, write: if false;
     }
 
-    match /connections/{connectionId} {
+    match /connections/{connectionDocId} {
       allow read, write: if false;
     }
 
+    // NOTIFICATIONS: backend only
     match /notifications/{notificationId} {
       allow read, write: if false;
     }
 
+    // BLOCKS: backend only
     match /blocks/{blockId} {
       allow read, write: if false;
     }
 
+    // REPORTS: backend only
     match /reports/{reportId} {
       allow read, write: if false;
     }
 
+    // PRIVATE LOCATION DATA: backend only
     match /locations/{uid} {
       allow read, write: if false;
     }
 
+    // RATE LIMIT RECORDS: backend only
     match /rateLimits/{rateLimitId} {
       allow read, write: if false;
     }
 
+    // Default deny for every unspecified collection.
     match /{document=**} {
       allow read, write: if false;
     }
